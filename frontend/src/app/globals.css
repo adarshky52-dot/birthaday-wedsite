@@ -1,0 +1,427 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #fffcf5 0%, #ffeef2 50%, #f6eeff 100%);
+  background-attachment: fixed;
+  color: #3c1e29;
+  font-family: var(--font-inter), sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom romantic scrollbar adapted to light theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 238, 242, 0.4);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 141, 161, 0.5);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 141, 161, 0.8);
+}
+
+/* Glassmorphism helpers for light theme */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 141, 161, 0.2) !important;
+  box-shadow: 0 8px 32px 0 rgba(224, 92, 117, 0.06) !important;
+}
+
+.glass-card-glow {
+  position: relative;
+  transition: all 0.4s ease;
+}
+.glass-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(255,141,161,0.3) 0%, rgba(214,181,255,0.3) 100%);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.glass-card-glow:hover::before {
+  opacity: 1;
+}
+.glass-card-glow:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(224, 92, 117, 0.12) !important;
+}
+
+/* Background Aurora overlays - optimized for light theme */
+.aurora-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(130px);
+  opacity: 0.35;
+  z-index: -3;
+  pointer-events: none;
+}
+.aurora-pink {
+  background: #ffc2cd;
+  top: -10%;
+  left: -10%;
+}
+.aurora-lavender {
+  background: #e9dbff;
+  bottom: -10%;
+  right: -10%;
+}
+
+/* Handwritten font styling helper */
+.font-love {
+  font-family: var(--font-sacramento), 'Great Vibes', 'cursive';
+}
+
+/* Custom color mapping overrides for light theme readability */
+.text-white {
+  color: #3c1e29;
+}
+.text-white\/90 {
+  color: rgba(60, 30, 41, 0.9);
+}
+.text-white\/80 {
+  color: rgba(60, 30, 41, 0.8);
+}
+.text-white\/70 {
+  color: rgba(60, 30, 41, 0.7);
+}
+.text-white\/60 {
+  color: rgba(60, 30, 41, 0.6);
+}
+.text-white\/50 {
+  color: rgba(60, 30, 41, 0.5);
+}
+.text-white\/40 {
+  color: rgba(60, 30, 41, 0.4);
+}
+.text-white\/30 {
+  color: rgba(60, 30, 41, 0.3);
+}
+.text-white\/20 {
+  color: rgba(60, 30, 41, 0.2);
+}
+
+.text-rose-300 {
+  color: #e11d48 !important; /* Rose 600 */
+}
+.text-romantic-pink {
+  color: #db2777 !important; /* Pink 600 */
+}
+
+/* Maintain real white for elements that actually have dark backgrounds (e.g. buttons) */
+.bg-rose-500 .text-white,
+.bg-rose-500.text-white,
+.bg-rose-600 .text-white,
+.bg-rose-600.text-white,
+.bg-purple-500 .text-white,
+.bg-purple-600 .text-white,
+.bg-purple-600.text-white,
+.bg-gradient-to-r .text-white,
+.bg-gradient-to-r.text-white,
+.bg-emerald-500 .text-white,
+.bg-emerald-500.text-white,
+.bg-slate-800 .text-white,
+.bg-slate-900 .text-white,
+.bg-black .text-white,
+.bg-black\/40 .text-white,
+.bg-black\/50 .text-white,
+.bg-black\/60 .text-white,
+.bg-black\/80 .text-white,
+.bg-black\/90 .text-white,
+.bg-rose-900\/30 .text-white,
+.bg-rose-900\/40 .text-white,
+.bg-rose-950 .text-white,
+.bg-rose-900 .text-white,
+.bg-[#351025]\/50 .text-white,
+.bg-[#1f0b18]\/60 .text-white,
+.bg-[#230d1c]\/60 .text-white,
+.bg-[#4a1c37] .text-white,
+.bg-[#4a1c37] *.text-white,
+.text-white.btn,
+.bg-rose-500,
+.bg-rose-600,
+.bg-purple-500,
+.bg-purple-600,
+.bg-gradient-to-r,
+.bg-emerald-500,
+.bg-emerald-600,
+.bg-slate-800,
+.bg-slate-900 {
+  color: #ffffff !important;
+}
+
+/* Restore light pink for text-rose-300 when inside dark background elements */
+.bg-rose-500 .text-rose-300,
+.bg-rose-600 .text-rose-300,
+.bg-purple-600 .text-rose-300,
+.bg-gradient-to-r .text-rose-300,
+.bg-black\/80 .text-rose-300,
+.bg-black\/90 .text-rose-300,
+.bg-\[\#06020fed\]\/95 .text-rose-300,
+.fixed.z-50 .text-rose-300,
+.bg-black .text-rose-300,
+.bg-rose-950 .text-rose-300,
+.bg-rose-900\/30 .text-rose-300,
+.bg-rose-900\/40 .text-rose-300,
+.bg-[#351025]\/50 .text-rose-300,
+.bg-[#4a1c37] .text-rose-300,
+.bg-[#1f0b18]\/60 .text-rose-300,
+.bg-[#230d1c]\/60 .text-rose-300 {
+  color: #fda4af !important; /* Rose 300 */
+}
+
+.bg-rose-500 svg,
+.bg-rose-600 svg,
+.bg-purple-500 svg,
+.bg-purple-600 svg,
+.bg-gradient-to-r svg,
+.bg-emerald-500 svg {
+  color: #ffffff !important;
+}
+
+/* Light mapping for transparent overlays */
+.bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.45) !important;
+}
+.bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+}
+.border-white\/5 {
+  border-color: rgba(255, 141, 161, 0.18) !important;
+}
+.border-white\/10 {
+  border-color: rgba(255, 141, 161, 0.28) !important;
+}
+.border-white\/20 {
+  border-color: rgba(255, 141, 161, 0.38) !important;
+}
+
+/* Maintain real white for text inside modal overlays (e.g. Lightbox gallery, video player, letters popups) */
+.fixed.inset-0.z-50.bg-black\/80 .text-white,
+.fixed.inset-0.z-50.bg-black\/80 *.text-white,
+.fixed.inset-0.z-50.bg-black\/90 .text-white,
+.fixed.inset-0.z-50.bg-black\/90 *.text-white,
+.fixed.inset-0.z-50.bg-\[\#06020fed\]\/95 .text-white,
+.fixed.inset-0.z-50.bg-\[\#06020fed\]\/95 *.text-white,
+.fixed.inset-0.z-50.bg-black\/80 span,
+.fixed.inset-0.z-50.bg-black\/90 span,
+.fixed.inset-0.z-50.bg-\[\#06020fed\]\/95 span,
+.fixed.inset-0.z-50.bg-black\/80 button,
+.fixed.inset-0.z-50.bg-black\/90 button,
+.fixed.inset-0.z-50.bg-\[\#06020fed\]\/95 button,
+.fixed.inset-0.z-50.bg-black\/80 svg,
+.fixed.inset-0.z-50.bg-black\/90 svg,
+.fixed.inset-0.z-50.bg-\[\#06020fed\]\/95 svg,
+.fixed.inset-0.z-50.bg-black\/80 p,
+.fixed.inset-0.z-50.bg-black\/90 p,
+.fixed.inset-0.z-50.bg-\[\#06020fed\]\/95 p,
+.fixed.inset-0.z-50.bg-black\/80 h3,
+.fixed.inset-0.z-50.bg-black\/90 h3,
+.fixed.inset-0.z-50.bg-\[\#06020fed\]\/95 h3 {
+  color: #ffffff !important;
+}
+
+/* Form input, textarea, and select styling for bright theme */
+input:not([type="checkbox"]):not([type="radio"]), 
+textarea, 
+select {
+  color: #3c1e29 !important;
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(255, 141, 161, 0.25) !important;
+}
+input::placeholder, 
+textarea::placeholder {
+  color: rgba(60, 30, 41, 0.4) !important;
+}
+input:focus, 
+textarea:focus, 
+select:focus {
+  background-color: #ffffff !important;
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.15) !important;
+}
+
+/* ==========================================
+   3D UI/UX ENHANCEMENTS
+   ========================================== */
+
+/* 3D Envelope System Styling */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.envelope-container {
+  perspective: 1000px;
+  width: 18rem; /* w-72 equivalent */
+  height: 12rem; /* h-48 equivalent */
+}
+
+/* Main 3D envelope card folder */
+.envelope-3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(85, 23, 56, 0.35); /* Elegant matching dark berry */
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
+}
+
+.envelope-3d:hover {
+  box-shadow: 0 20px 40px rgba(244, 63, 94, 0.25);
+}
+
+/* Flap at top that opens on click */
+.envelope-3d-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #4c1d3b; /* Dark rose wood */
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top;
+  transition: transform 0.5s ease-in-out, z-index 0.5s;
+  z-index: 30;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+/* Fold-open state for flap */
+.envelope-3d.open .envelope-3d-flap {
+  transform: rotateX(180deg);
+  z-index: 10;
+}
+
+/* Envelope pockets (left, right, bottom triangles) */
+.envelope-3d-pocket {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  z-index: 25;
+}
+
+/* Left side triangle */
+.envelope-3d-pocket::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 9rem solid rgba(34, 10, 24, 0.9);
+  border-top: 6rem solid transparent;
+  border-bottom: 6rem solid rgba(34, 10, 24, 0.9);
+}
+
+/* Right side triangle */
+.envelope-3d-pocket::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-right: 9rem solid rgba(44, 14, 31, 0.9);
+  border-top: 6rem solid transparent;
+  border-bottom: 6rem solid rgba(44, 14, 31, 0.9);
+}
+
+/* Bottom center pocket triangle */
+.envelope-3d-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  background: #391228;
+  clip-path: polygon(0 100%, 100% 100%, 50% 0);
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  z-index: 26;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Solid Back lining */
+.envelope-3d-back {
+  position: absolute;
+  inset: 0;
+  background: #250b1a;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(244, 63, 94, 0.15);
+  z-index: 5;
+}
+
+/* The actual paper card sliding out */
+.envelope-3d-letter-preview {
+  position: absolute;
+  bottom: 6px;
+  left: 12px;
+  width: calc(100% - 24px);
+  height: calc(100% - 16px);
+  background: #fdfaf2;
+  border-radius: 0.5rem;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  z-index: 15;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), z-index 0.6s;
+  transform: translateY(0) scale(0.95);
+  padding: 1rem;
+}
+
+/* Pull out card when open */
+.envelope-3d.open .envelope-3d-letter-preview {
+  transform: translateY(-40%) scale(1.02) rotateZ(-1deg);
+  z-index: 35;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Heart seal */
+.envelope-3d-seal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -30%) scale(1);
+  z-index: 32;
+  transition: transform 0.5s ease, opacity 0.4s ease;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+}
+
+.envelope-3d.open .envelope-3d-seal {
+  transform: translate(-50%, -200%) scale(0.8);
+  opacity: 0;
+}
+
+

@@ -1,0 +1,14 @@
+{
+  "name": "romantic-birthday-desktop",
+  "version": "1.0.0",
+  "description": "Desktop version of the Romantic Birthday Scrapbook",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "node convert_icon.js && node run_packager.js"
+  },
+  "devDependencies": {
+    "electron": "^29.3.0",
+    "electron-packager": "^17.1.2"
+  }
+}
