@@ -8,8 +8,6 @@ out/
 # Backend configurations and local databases
 backend/.env
 backend/database.sqlite
-backend/uploads/*
-!backend/uploads/.gitkeep
 
 # Electron / Windows App packaging outputs
 windows-app/dist/

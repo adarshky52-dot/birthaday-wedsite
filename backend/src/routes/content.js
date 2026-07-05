@@ -7,13 +7,50 @@ const authMiddleware = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { query } = require('../config/db');
 
-// Helper to delete a file when database entry is deleted
+// Helper to delete a file when database entry is deleted (skips external URLs)
 const deleteFile = (filePath) => {
   if (!filePath) return;
+  if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+    return;
+  }
   const localPath = path.join(__dirname, '..', '..', filePath.replace(/^\//, ''));
   fs.unlink(localPath, (err) => {
     if (err) console.error(`Error deleting file ${localPath}:`, err.message);
   });
+};
+
+const cloudinary = require('cloudinary').v2;
+
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
+
+// Uploads a file to Cloudinary if configured, else falls back to local relative path
+const uploadToCloudinary = async (file) => {
+  if (!file) return null;
+  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    const relativePath = file.path.replace(/\\/g, '/');
+    const uploadsIndex = relativePath.indexOf('uploads/');
+    return uploadsIndex !== -1 ? '/' + relativePath.substring(uploadsIndex) : '/' + relativePath;
+  }
+
+  try {
+    const res = await cloudinary.uploader.upload(file.path, {
+      folder: 'birthday-scrapbook',
+      resource_type: 'auto'
+    });
+    fs.unlink(file.path, (err) => {
+      if (err) console.error('Error deleting local temp file:', err.message);
+    });
+    return res.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error.message);
+    throw error;
+  }
 };
 
 // Helper to map SQLite results to match Mongoose schema output formats expected by React
@@ -71,10 +108,7 @@ router.get('/timeline', async (req, res) => {
 router.post('/timeline', authMiddleware, upload.single('timeline'), async (req, res) => {
   try {
     const { title, description, date, category, order } = req.body;
-    let imageUrl = '';
-    if (req.file) {
-      imageUrl = `/uploads/timeline/${req.file.filename}`;
-    }
+    const imageUrl = req.file ? await uploadToCloudinary(req.file) : '';
 
     const orderIndex = order ? parseInt(order) : 0;
     const result = await query.run(
@@ -98,7 +132,7 @@ router.put('/timeline/:id', authMiddleware, upload.single('timeline'), async (re
     let imageUrl = item.imageUrl;
     if (req.file) {
       deleteFile(item.imageUrl);
-      imageUrl = `/uploads/timeline/${req.file.filename}`;
+      imageUrl = await uploadToCloudinary(req.file);
     }
 
     const updatedTitle = title !== undefined ? title : item.title;
@@ -147,10 +181,7 @@ router.get('/memories', async (req, res) => {
 router.post('/memories', authMiddleware, upload.single('memories'), async (req, res) => {
   try {
     const { title, caption, category, date } = req.body;
-    let imageUrl = '';
-    if (req.file) {
-      imageUrl = `/uploads/memories/${req.file.filename}`;
-    }
+    const imageUrl = req.file ? await uploadToCloudinary(req.file) : '';
 
     const result = await query.run(
       'INSERT INTO memories (title, caption, category, date, imageUrl) VALUES (?, ?, ?, ?, ?)',
@@ -173,7 +204,7 @@ router.put('/memories/:id', authMiddleware, upload.single('memories'), async (re
     let imageUrl = item.imageUrl;
     if (req.file) {
       deleteFile(item.imageUrl);
-      imageUrl = `/uploads/memories/${req.file.filename}`;
+      imageUrl = await uploadToCloudinary(req.file);
     }
 
     const updatedTitle = title !== undefined ? title : item.title;
@@ -221,10 +252,7 @@ router.get('/letters', async (req, res) => {
 router.post('/letters', authMiddleware, upload.single('letters'), async (req, res) => {
   try {
     const { title, content, date, signature } = req.body;
-    let coverImageUrl = '';
-    if (req.file) {
-      coverImageUrl = `/uploads/letters/${req.file.filename}`;
-    }
+    const coverImageUrl = req.file ? await uploadToCloudinary(req.file) : '';
 
     const result = await query.run(
       'INSERT INTO letters (title, content, coverImageUrl, date, signature) VALUES (?, ?, ?, ?, ?)',
@@ -247,7 +275,7 @@ router.put('/letters/:id', authMiddleware, upload.single('letters'), async (req,
     let coverImageUrl = item.coverImageUrl;
     if (req.file) {
       deleteFile(item.coverImageUrl);
-      coverImageUrl = `/uploads/letters/${req.file.filename}`;
+      coverImageUrl = await uploadToCloudinary(req.file);
     }
 
     const updatedTitle = title !== undefined ? title : item.title;
@@ -295,11 +323,11 @@ router.get('/photos', async (req, res) => {
 router.post('/photos', authMiddleware, upload.single('photos'), async (req, res) => {
   try {
     const { title, description } = req.body;
-    if (!req.file) {
+    const imageUrl = req.file ? await uploadToCloudinary(req.file) : '';
+    if (!imageUrl) {
       return res.status(400).json({ message: 'Please upload a photo image.' });
     }
     
-    const imageUrl = `/uploads/photos/${req.file.filename}`;
     const uploadDate = new Date().toISOString();
 
     const result = await query.run(
@@ -342,11 +370,11 @@ router.get('/voicenotes', async (req, res) => {
 router.post('/voicenotes', authMiddleware, upload.single('audio'), async (req, res) => {
   try {
     const { title, duration, date } = req.body;
-    if (!req.file) {
+    const audioUrl = req.file ? await uploadToCloudinary(req.file) : '';
+    if (!audioUrl) {
       return res.status(400).json({ message: 'Please upload an audio file.' });
     }
 
-    const audioUrl = `/uploads/audio/${req.file.filename}`;
     const noteDate = date || new Date().toLocaleDateString();
 
     const result = await query.run(
@@ -389,11 +417,11 @@ router.get('/videos', async (req, res) => {
 router.post('/videos', authMiddleware, upload.single('videos'), async (req, res) => {
   try {
     const { title, description } = req.body;
-    if (!req.file) {
+    const videoUrl = req.file ? await uploadToCloudinary(req.file) : '';
+    if (!videoUrl) {
       return res.status(400).json({ message: 'Please upload a video file.' });
     }
 
-    const videoUrl = `/uploads/videos/${req.file.filename}`;
     const uploadDate = new Date().toISOString();
 
     const result = await query.run(
