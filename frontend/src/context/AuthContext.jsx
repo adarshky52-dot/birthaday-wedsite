@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -14,19 +14,15 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('adminToken');
       if (token) {
         try {
-          // Set default axios header
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          const response = await axios.get('/api/auth/verify');
+          const response = await api.get('/api/auth/verify');
           if (response.data.valid) {
             setAdmin(response.data.user);
           } else {
             localStorage.removeItem('adminToken');
-            delete axios.defaults.headers.common['Authorization'];
           }
         } catch (error) {
           console.error('Auth verification failed:', error.message);
           localStorage.removeItem('adminToken');
-          delete axios.defaults.headers.common['Authorization'];
         }
       }
       setLoading(false);
@@ -37,11 +33,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { username, password });
+      const response = await api.post('/api/auth/login', { username, password });
       const { token, user } = response.data;
       
       localStorage.setItem('adminToken', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setAdmin(user);
       return { success: true };
     } catch (error) {
@@ -52,7 +47,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('adminToken');
-    delete axios.defaults.headers.common['Authorization'];
     setAdmin(null);
   };
 
@@ -64,3 +58,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
