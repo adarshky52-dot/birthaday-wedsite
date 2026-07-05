@@ -1,31 +1,62 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const dbPath = path.join(__dirname, '..', '..', 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
+let query;
 
-// Wrap SQLite callbacks in Promises for elegant async/await support
-const query = {
-  run: (sql, params = []) => new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
-      if (err) reject(err);
-      else resolve(this); // this.lastID, this.changes
-    });
-  }),
-  get: (sql, params = []) => new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  }),
-  all: (sql, params = []) => new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  })
-};
+if (process.env.TURSO_DATABASE_URL) {
+  console.log('Initializing Turso Cloud SQLite Database...');
+  const { createClient } = require('@libsql/client');
+  const client = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN || '',
+  });
+
+  query = {
+    run: async (sql, params = []) => {
+      const res = await client.execute({ sql, args: params });
+      return { 
+        lastID: res.lastInsertRowid !== undefined ? Number(res.lastInsertRowid) : undefined, 
+        changes: res.rowsAffected 
+      };
+    },
+    get: async (sql, params = []) => {
+      const res = await client.execute({ sql, args: params });
+      return res.rows[0] ? { ...res.rows[0] } : null;
+    },
+    all: async (sql, params = []) => {
+      const res = await client.execute({ sql, args: params });
+      return res.rows.map(row => ({ ...row }));
+    }
+  };
+} else {
+  console.log('Initializing Local SQLite Database...');
+  const sqlite3 = require('sqlite3').verbose();
+  const path = require('path');
+  const dbPath = path.join(__dirname, '..', '..', 'database.sqlite');
+  const db = new sqlite3.Database(dbPath);
+
+  // Wrap SQLite callbacks in Promises for elegant async/await support
+  query = {
+    run: (sql, params = []) => new Promise((resolve, reject) => {
+      db.run(sql, params, function(err) {
+        if (err) reject(err);
+        else resolve({ lastID: this.lastID, changes: this.changes });
+      });
+    }),
+    get: (sql, params = []) => new Promise((resolve, reject) => {
+      db.get(sql, params, (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    }),
+    all: (sql, params = []) => new Promise((resolve, reject) => {
+      db.all(sql, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    })
+  };
+}
+
 
 const connectDB = async () => {
   try {
