@@ -26,12 +26,15 @@ export const AudioProvider = ({ children }) => {
   useEffect(() => {
     const fetchPlaylist = async () => {
       try {
+        console.log("AudioContext: Fetching custom playlist from server...");
         const res = await api.get('/api/content/songs');
+        console.log("AudioContext: Server playlist response:", res.data);
         if (res.data && res.data.length > 0) {
           const formatted = res.data.map(song => ({
             title: song.title,
             url: getMediaUrl(song.url)
           }));
+          console.log("AudioContext: Loaded custom playlist:", formatted);
           setPlaylist(formatted);
         }
       } catch (err) {
@@ -44,6 +47,7 @@ export const AudioProvider = ({ children }) => {
   useEffect(() => {
     // Instantiate Audio on mount in client side using the initial first song
     if (!audioRef.current && playlist.length > 0) {
+      console.log("AudioContext: Instantiating HTMLAudioElement with source:", playlist[0].url);
       audioRef.current = new Audio(playlist[0].url);
       audioRef.current.loop = true;
       audioRef.current.volume = 0.5;
@@ -51,9 +55,13 @@ export const AudioProvider = ({ children }) => {
       // Track play state change
       const onPlay = () => setIsPlaying(true);
       const onPause = () => setIsPlaying(false);
+      const onError = (e) => {
+        console.error("AudioContext: Error playing audio file. Media error details:", audioRef.current?.error);
+      };
 
       audioRef.current.addEventListener('play', onPlay);
       audioRef.current.addEventListener('pause', onPause);
+      audioRef.current.addEventListener('error', onError);
     }
 
     return () => {
@@ -69,10 +77,15 @@ export const AudioProvider = ({ children }) => {
     
     // Change source if track index or playlist contents change
     const wasPlaying = isPlaying;
-    audioRef.current.src = playlist[currentTrack].url;
+    const targetUrl = playlist[currentTrack].url;
+    console.log(`AudioContext: Switching track to "${playlist[currentTrack].title}" -> URL: ${targetUrl}`);
+    
+    audioRef.current.src = targetUrl;
     audioRef.current.load();
     if (wasPlaying) {
-      audioRef.current.play().catch(err => console.log("Audio play blocked by user gesture:", err));
+      audioRef.current.play().catch(err => {
+        console.error("AudioContext: Play block check:", err);
+      });
     }
   }, [currentTrack, playlist]);
 
