@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import api, { getMediaUrl } from '../../services/api';
 import {
-  ShieldAlert, LayoutDashboard, Calendar, Camera, BookOpen, Volume2, Film, Heart, Plus, Trash2, Edit, Save, X, Upload, Gift
+  ShieldAlert, LayoutDashboard, Calendar, Camera, BookOpen, Volume2, Film, Heart, Plus, Trash2, Edit, Save, X, Upload, Gift, Music
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [photoForm, setPhotoForm] = useState({ title: '', description: '' });
   const [voiceForm, setVoiceForm] = useState({ title: '', duration: '2:15', date: '' });
   const [videoForm, setVideoForm] = useState({ title: '', description: '' });
+  const [songForm, setSongForm] = useState({ title: '', url: '' });
   
   const [surpriseForm, setSurpriseForm] = useState({
     giftBoxTitle: '',
@@ -74,6 +75,7 @@ export default function AdminDashboard() {
       else if (activeTab === 'photos') endpoint = '/api/content/photos';
       else if (activeTab === 'voicenotes') endpoint = '/api/content/voicenotes';
       else if (activeTab === 'videos') endpoint = '/api/content/videos';
+      else if (activeTab === 'songs') endpoint = '/api/content/songs';
 
       if (!endpoint) return [];
       const res = await api.get(endpoint);
@@ -183,6 +185,7 @@ export default function AdminDashboard() {
       else if (type === 'photos') endpoint = `/api/content/photos/${id}`;
       else if (type === 'voicenotes') endpoint = `/api/content/voicenotes/${id}`;
       else if (type === 'videos') endpoint = `/api/content/videos/${id}`;
+      else if (type === 'songs') endpoint = `/api/content/songs/${id}`;
 
       return api.delete(endpoint);
     },
@@ -206,6 +209,7 @@ export default function AdminDashboard() {
       else if (activeTab === 'photos') endpoint = '/api/content/photos';
       else if (activeTab === 'voicenotes') endpoint = '/api/content/voicenotes';
       else if (activeTab === 'videos') endpoint = '/api/content/videos';
+      else if (activeTab === 'songs') endpoint = '/api/content/songs';
 
       return api.post(endpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -223,6 +227,7 @@ export default function AdminDashboard() {
       setPhotoForm({ title: '', description: '' });
       setVoiceForm({ title: '', duration: '2:15', date: '' });
       setVideoForm({ title: '', description: '' });
+      setSongForm({ title: '', url: '' });
       alert('Item added successfully!');
     },
     onError: (err) => {
@@ -269,6 +274,15 @@ export default function AdminDashboard() {
       formData.append('description', videoForm.description);
       if (uploadFile) formData.append('videos', uploadFile);
       else return alert('Please select a video file to upload.');
+    } else if (activeTab === 'songs') {
+      formData.append('title', songForm.title);
+      if (uploadFile) {
+        formData.append('music', uploadFile);
+      } else if (songForm.url) {
+        formData.append('url', songForm.url);
+      } else {
+        return alert('Please upload a music file OR enter a direct song URL.');
+      }
     }
 
     createMutation.mutate(formData);
@@ -299,6 +313,7 @@ export default function AdminDashboard() {
           { id: 'photos', label: 'Photos Montage', icon: Camera },
           { id: 'voicenotes', label: 'Voice Notes', icon: Volume2 },
           { id: 'videos', label: 'Videos', icon: Film },
+          { id: 'songs', label: 'Background Music', icon: Music },
           { id: 'surprise', label: 'Surprise Settings', icon: Gift }
         ].map((tab) => {
           const Icon = tab.icon;
@@ -337,7 +352,8 @@ export default function AdminDashboard() {
                 { title: 'Memories logged', count: stats.totalMemories || 0, icon: Heart, color: 'text-rose-300 bg-rose-500/10' },
                 { title: 'Love Letters', count: stats.totalLetters || 0, icon: BookOpen, color: 'text-emerald-300 bg-emerald-500/10' },
                 { title: 'Voice Recordings', count: stats.totalVoiceNotes || 0, icon: Volume2, color: 'text-purple-300 bg-purple-500/10' },
-                { title: 'Memory Videos', count: stats.totalVideos || 0, icon: Film, color: 'text-pink-300 bg-pink-500/10' }
+                { title: 'Memory Videos', count: stats.totalVideos || 0, icon: Film, color: 'text-pink-300 bg-pink-500/10' },
+                { title: 'Background Songs', count: stats.totalSongs || 0, icon: Music, color: 'text-amber-300 bg-amber-500/10' }
               ].map((s, idx) => (
                 <div key={idx} className="glass-panel rounded-2xl p-5 border-white/5 flex flex-col gap-2 relative overflow-hidden text-left">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
@@ -622,6 +638,33 @@ export default function AdminDashboard() {
                   </div>
                 )}
 
+                {/* 7. Songs Form */}
+                {activeTab === 'songs' && (
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-3xs uppercase font-bold text-white/50">Song Title</label>
+                      <input
+                        type="text"
+                        required
+                        value={songForm.title}
+                        onChange={(e) => setSongForm({ ...songForm, title: e.target.value })}
+                        className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm focus:outline-none focus:border-rose-400 text-white"
+                        placeholder="e.g. Instrumental Romantic Theme"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-3xs uppercase font-bold text-white/50">External Song URL (Optional, if uploading file below)</label>
+                      <input
+                        type="url"
+                        value={songForm.url}
+                        onChange={(e) => setSongForm({ ...songForm, url: e.target.value })}
+                        className="rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm focus:outline-none focus:border-rose-400 text-white"
+                        placeholder="e.g. https://example.com/romantic-melody.mp3"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* General File Upload Input for form entries */}
                 <div className="flex flex-col gap-1.5 mt-2">
                   <label className="text-3xs uppercase font-bold text-white/50">File Attachment</label>
@@ -678,13 +721,18 @@ export default function AdminDashboard() {
                           className="w-12 h-12 rounded-xl object-cover border border-white/10 shrink-0"
                         />
                       )}
+                      {!item.imageUrl && !item.coverImageUrl && activeTab === 'songs' && (
+                        <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shrink-0">
+                          <Music className="w-5 h-5 text-amber-300" />
+                        </div>
+                      )}
                       
                       <div className="min-w-0">
                         <h4 className="font-serif font-bold text-white truncate text-sm">
                           {item.title}
                         </h4>
                         <p className="text-3xs text-white/50 uppercase mt-0.5 font-semibold truncate">
-                          {item.date || item.category || 'Logged item'}
+                          {activeTab === 'songs' ? (item.url && !item.url.startsWith('/') ? 'External Link' : 'Local File Upload') : (item.date || item.category || 'Logged item')}
                         </p>
                       </div>
                     </div>

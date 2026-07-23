@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import api, { getMediaUrl } from '../services/api';
 
 const AudioContext = createContext(null);
 
@@ -9,8 +10,8 @@ export const AudioProvider = ({ children }) => {
   const [currentTrack, setCurrentTrack] = useState(0);
   const audioRef = useRef(null);
 
-  // Playlist of romantic instrumental background music
-  const playlist = [
+  // Playlist of romantic instrumental background music (initially with fallbacks)
+  const [playlist, setPlaylist] = useState([
     {
       title: "Romantic Piano Waltz",
       url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" // Fallback royalty free
@@ -19,41 +20,61 @@ export const AudioProvider = ({ children }) => {
       title: "Sweet Memories Guitar",
       url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
     }
-  ];
+  ]);
+
+  // Fetch playlist from server
+  useEffect(() => {
+    const fetchPlaylist = async () => {
+      try {
+        const res = await api.get('/api/content/songs');
+        if (res.data && res.data.length > 0) {
+          const formatted = res.data.map(song => ({
+            title: song.title,
+            url: getMediaUrl(song.url)
+          }));
+          setPlaylist(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to fetch custom background songs playlist:", err);
+      }
+    };
+    fetchPlaylist();
+  }, []);
 
   useEffect(() => {
-    // Instantiate Audio on mount in client side
-    audioRef.current = new Audio(playlist[currentTrack].url);
-    audioRef.current.loop = true;
-    audioRef.current.volume = 0.5;
+    // Instantiate Audio on mount in client side using the initial first song
+    if (!audioRef.current && playlist.length > 0) {
+      audioRef.current = new Audio(playlist[0].url);
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.5;
 
-    // Track play state change
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
+      // Track play state change
+      const onPlay = () => setIsPlaying(true);
+      const onPause = () => setIsPlaying(false);
 
-    audioRef.current.addEventListener('play', onPlay);
-    audioRef.current.addEventListener('pause', onPause);
+      audioRef.current.addEventListener('play', onPlay);
+      audioRef.current.addEventListener('pause', onPause);
+    }
 
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.removeEventListener('play', onPlay);
-        audioRef.current.removeEventListener('pause', onPause);
       }
     };
-  }, []);
+  }, [playlist]);
 
   useEffect(() => {
     if (!audioRef.current) return;
+    if (playlist.length === 0 || !playlist[currentTrack]) return;
     
-    // Change source if track index changes
+    // Change source if track index or playlist contents change
     const wasPlaying = isPlaying;
     audioRef.current.src = playlist[currentTrack].url;
     audioRef.current.load();
     if (wasPlaying) {
       audioRef.current.play().catch(err => console.log("Audio play blocked by user gesture:", err));
     }
-  }, [currentTrack]);
+  }, [currentTrack, playlist]);
 
   const togglePlay = () => {
     if (!audioRef.current) return;

@@ -171,7 +171,24 @@ const connectDB = async () => {
       console.log('Default Surprise settings seeded into SQLite.');
     }
 
-    // 9. Seed default Admin if the table is empty
+    // 9. Create Songs Table
+    await query.run(`
+      CREATE TABLE IF NOT EXISTS songs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        url TEXT
+      )
+    `);
+
+    // Seed default songs if empty
+    const songsCount = await query.get('SELECT COUNT(*) as count FROM songs');
+    if (songsCount.count === 0) {
+      await query.run('INSERT INTO songs (title, url) VALUES (?, ?)', ["Romantic Piano Waltz", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"]);
+      await query.run('INSERT INTO songs (title, url) VALUES (?, ?)', ["Sweet Memories Guitar", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"]);
+      console.log('Default songs seeded into SQLite.');
+    }
+
+    // 10. Seed default Admin if the table is empty
     const adminCountRow = await query.get('SELECT COUNT(*) as count FROM admins');
     if (adminCountRow.count === 0) {
       const hashedPassword = await bcrypt.hash('admin123', 10);

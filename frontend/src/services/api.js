@@ -38,7 +38,8 @@ const mockFallbacks = {
     totalMemories: 7,
     totalLetters: 3,
     totalVoiceNotes: 2,
-    totalVideos: 2
+    totalVideos: 2,
+    totalSongs: 2
   },
   '/api/content/surprise-settings': {
     giftBoxTitle: "A Surprise For You 🎁",
@@ -48,7 +49,11 @@ const mockFallbacks = {
     step5Title: "Eternal Love",
     step5Message: "You are the most beautiful chapter of my life. Happy Birthday, My Love ❤️",
     step5Desc: "May your birthday be filled with the same infinite joy and warmth that you bring to my life every single day."
-  }
+  },
+  '/api/content/songs': [
+    { _id: 's1', title: "Romantic Piano Waltz", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    { _id: 's2', title: "Sweet Memories Guitar", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" }
+  ]
 };
 
 export const getMediaUrl = (url) => {

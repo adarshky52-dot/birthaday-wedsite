@@ -79,6 +79,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
     const videosCount = await query.get('SELECT COUNT(*) as count FROM videos');
     const voicesCount = await query.get('SELECT COUNT(*) as count FROM voicenotes');
     const timelineCount = await query.get('SELECT COUNT(*) as count FROM timeline');
+    const songsCount = await query.get('SELECT COUNT(*) as count FROM songs');
 
     res.json({
       totalPhotos: photosCount.count,
@@ -86,7 +87,8 @@ router.get('/stats', authMiddleware, async (req, res) => {
       totalLetters: lettersCount.count,
       totalVideos: videosCount.count,
       totalVoiceNotes: voicesCount.count,
-      totalTimeline: timelineCount.count
+      totalTimeline: timelineCount.count,
+      totalSongs: songsCount.count
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching stats.', error: error.message });
@@ -503,6 +505,60 @@ router.put('/surprise-settings', authMiddleware, async (req, res) => {
     res.json(updatedSettings);
   } catch (error) {
     res.status(500).json({ message: 'Error updating surprise settings.', error: error.message });
+  }
+});
+
+/* =========================================================================
+   9. SONGS ENDPOINTS (CRUD)
+   ========================================================================= */
+router.get('/songs', async (req, res) => {
+  try {
+    const items = await query.all('SELECT * FROM songs ORDER BY id DESC');
+    res.json(mapRows(items));
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching songs.', error: error.message });
+  }
+});
+
+router.post('/songs', authMiddleware, upload.single('music'), async (req, res) => {
+  try {
+    const { title, url } = req.body;
+    let songUrl = '';
+    
+    if (req.file) {
+      songUrl = await uploadToCloudinary(req.file);
+    } else if (url) {
+      songUrl = url;
+    }
+
+    if (!songUrl) {
+      return res.status(400).json({ message: 'Please upload an audio file or provide a direct song URL.' });
+    }
+
+    const songTitle = title || (req.file ? req.file.originalname : 'Unnamed Song');
+
+    const result = await query.run(
+      'INSERT INTO songs (title, url) VALUES (?, ?)',
+      [songTitle, songUrl]
+    );
+
+    const newSong = await query.get('SELECT * FROM songs WHERE id = ?', [result.lastID]);
+    res.status(201).json(mapRow(newSong));
+  } catch (error) {
+    res.status(500).json({ message: 'Error saving song.', error: error.message });
+  }
+});
+
+router.delete('/songs/:id', authMiddleware, async (req, res) => {
+  try {
+    const item = await query.get('SELECT * FROM songs WHERE id = ?', [req.params.id]);
+    if (!item) return res.status(404).json({ message: 'Song not found' });
+    
+    await query.run('DELETE FROM songs WHERE id = ?', [req.params.id]);
+    deleteFile(item.url);
+    res.json({ message: 'Song deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting song.', error: error.message });
   }
 });
 
