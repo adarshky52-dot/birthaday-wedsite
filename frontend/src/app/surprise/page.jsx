@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import api, { getMediaUrl } from '../../services/api';
@@ -49,7 +49,9 @@ export default function BirthdaySurprise() {
     'https://picsum.photos/id/1029/500/500'
   ];
 
-  const montagePhotos = photos.length > 0 ? photos.map(p => getMediaUrl(p.imageUrl)) : fallbackMontage;
+  const montagePhotos = useMemo(() => {
+    return photos.length > 0 ? photos.map(p => getMediaUrl(p.imageUrl)) : fallbackMontage;
+  }, [photos]);
 
   // Handle Box Opening
   const handleOpenBox = () => {
@@ -98,6 +100,7 @@ export default function BirthdaySurprise() {
   useEffect(() => {
     let intervalId;
     if (step === 4) {
+      setPhotoIndex(0);
       intervalId = setInterval(() => {
         setPhotoIndex((prev) => {
           if (prev >= montagePhotos.length - 1) {
